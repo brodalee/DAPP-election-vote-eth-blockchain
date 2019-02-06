@@ -113,5 +113,4 @@ contract("Election", (accounts) => {
             assert.equal(voteCount, 0, "candidate 4 did not receive any votes");
         })
     });
-
 });
