@@ -3,7 +3,7 @@ class App {
     constructor() {
         this.web3Provider = null
         this.contracts = {}
-        this. account = '0x0'
+        this.account = '0x0'
     }
 
     init() {
@@ -49,8 +49,12 @@ class App {
             electionInstance = instance
             return electionInstance.candidatesCount()
         }).then((candidatesCount) => {
+
             let candidatesResults = $('#candidatesResults')
             $('#candidatesResults').empty()
+
+            let candidatesSelect = $('#candidatesSelect')
+            candidatesSelect.empty()
 
             for (let i = 1; i <= candidatesCount; i++) {
                 electionInstance.candidates(i).then((candidate) => {
@@ -60,19 +64,37 @@ class App {
 
                     let candidateTemplate = '<tr><th>' + id + '</th><td>' + name + '</td><td>' + voteCount + '</td></tr>'
                     candidatesResults.append(candidateTemplate);
+
+                    let candidateSelectTemplate = "<option value='" + id + "'>" + name + "</option>"
+                    candidatesSelect.append(candidateSelectTemplate)
                 })
             }
+
+            return electionInstance.voters(this.account)
+        }).then((hasVoted) => {
+            if (hasVoted) {
+                $('form').hide()
+            }
+
             loader.hide()
             content.show()
         }).catch((err) => {
             console.warn(err)
         })
+
+    }
+
+    vote() {
+        let candidateId = $('#candidatesSelect').val()
+        this.contracts.Election.deployed().then( (instance) => {
+            return instance.vote(candidateId)
+        }).then( (result) => {
+
+        }).catch( (err) => {
+            console.error(err)
+        })
     }
 }
 
-$(() => {
-    $(window).load(() => {
-        let app = new App()
-        app.init()
-    })
-})
+let app = new App()
+app.init()
