@@ -55,4 +55,61 @@ contract("Election", (accounts) => {
             assert.equal(voteCount, 1, "Increment the candidate's vote count")
         })
     })
+
+    it("Should throw exception when voting for an invalid candidate", () => {
+        return Election.deployed().then( (instance) => {
+            electionInstance = instance
+            return electionInstance.vote(99)
+        }).then(assert.fail).catch((err) => {
+            assert(err.message.indexOf("revert") >= 0, "error message must contain revert")
+            return electionInstance.candidates(1)
+        }).then( (candidate) => {
+            let voteCount = candidate[2]
+            assert.equal(voteCount, 1, "Candidate One did not receive the vote")
+            return electionInstance.candidates(2)
+        }).then((candidate) => {
+            let voteCount = candidate[2]
+            assert.equal(voteCount, 0, "Candidate Two did not receive the vote")
+            return electionInstance.candidates(3)
+        }).then((candidate) => {
+            let voteCount = candidate[2]
+            assert.equal(voteCount, 0, "Candidate Three did not receive the vote")
+            return electionInstance.candidates(4)
+        }).then((candidate) => {
+            let voteCount = candidate[2]
+            assert.equal(voteCount, 0, "Candidate Foor did not receive the vote")
+        })
+    })
+
+    it("Should throw exception when voter has already voted (double voting)", () => {
+        return Election.deployed().then(function(instance) {
+            electionInstance = instance;
+            candidateId = 2;
+            electionInstance.vote(candidateId, { from: accounts[1] });
+            return electionInstance.candidates(candidateId);
+        }).then(function(candidate) {
+            let voteCount = candidate[2];
+            assert.equal(voteCount, 1, "Voter can vote for the first time");
+            // Try to vote again
+            return electionInstance.vote(candidateId, { from: accounts[1] });
+        }).then(assert.fail).catch(function(error) {
+            assert(error.message.indexOf('revert') >= 0, "Error message must contain revert");
+            return electionInstance.candidates(1);
+        }).then(function(candidate1) {
+            let voteCount = candidate1[2];
+            assert.equal(voteCount, 1, "candidate 1 did not receive any votes");
+            return electionInstance.candidates(2);
+        }).then(function(candidate2) {
+            let voteCount = candidate2[2];
+            assert.equal(voteCount, 1, "candidate 2 did not receive any votes");
+            return electionInstance.candidates(3)
+        }).then(function(candidate2) {
+            let voteCount = candidate2[2];
+            assert.equal(voteCount, 0, "candidate 3 did not receive any votes");
+            return electionInstance.candidates(4)
+        }).then(function(candidate2) {
+            let voteCount = candidate2[2];
+            assert.equal(voteCount, 0, "candidate 4 did not receive any votes");
+        })
+    });
 });
