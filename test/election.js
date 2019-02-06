@@ -39,4 +39,20 @@ contract("Election", (accounts) => {
             assert.equal(candidate[2], 0, 'Contain the correct number of vote');
         })
     })
+
+    it("Should allow a voter to cast a vote", () => {
+        return Election.deployed().then( (instance) => {
+            electionInstance = instance
+            candidateId = 1
+            return electionInstance.vote(candidateId)
+        }).then( (receipt) => {
+            return electionInstance.voters(accounts[0])
+        }).then( (voted) => {
+            assert(voted, "Voter has voted")
+            return electionInstance.candidates(candidateId)
+        }).then( (candidate) => {
+            let voteCount = candidate[2]
+            assert.equal(voteCount, 1, "Increment the candidate's vote count")
+        })
+    })
 });
